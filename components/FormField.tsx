@@ -21,7 +21,7 @@ const FormField = ({ title, value, placeholder, handleChangeText, otherStyles }:
                 {/* create a touchableopacity that contains an image to toggle the password visibility */}
                 {title === 'Password' && (
                     <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                        <Image source={!showPassword? icons.eye : icons.eyeHide}
+                        <Image source={showPassword? icons.eye : icons.eyeHide}
                         resizeMode='contain' className='w-6 h-6' />
                     </TouchableOpacity>
                 )}
