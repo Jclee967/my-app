@@ -1,12 +1,13 @@
 import { View, Text, TextInput, TouchableOpacity, Image, Alert } from 'react-native'
 import { useState } from 'react'
 import { icons } from '../constants'
-import { router, usePathname } from 'expo-router'
+import { router, useLocalSearchParams, usePathname } from 'expo-router'
+import useAppwrite from '../lib/useAppwrite'
+import { searchPosts } from '../lib/appwrite'
 
-const SearchInput = () => {
-    const [showPassword, setShowPassword] = useState(false);
+const SearchInput = ({ initialQuery } : { initialQuery? : string }) => {
     const pathname = usePathname();
-    const [query, setQuery] = useState('')
+    const [query, setQuery] = useState(initialQuery || '')
     return (
         <View className='border-2 border-black-200 w-full h-16 px-4 rounded-2xl 
             bg-black-100 focus:border-secondary items-center flex-row space-x-4'>
@@ -25,7 +26,7 @@ const SearchInput = () => {
                 }
 
                 if(pathname.startsWith('/search')) router.setParams({query})
-                    else router.push(`/search?${query}`)
+                    else router.push(`/search/${query}`)
             }}>
                 <Image source={icons.search} className='w-5 h-5' resizeMode='contain'/>
             </TouchableOpacity>

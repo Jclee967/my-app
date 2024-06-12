@@ -1,5 +1,5 @@
-import { Client, Account, Avatars, ID, Databases, Query } from 'react-native-appwrite/src';
-
+import { Client, Account, Avatars, ID, Databases, Storage, Query, ImageGravity } from 'react-native-appwrite/src';
+import { ImagePickerAsset } from 'expo-image-picker';
 
 export const config = {
     endpoint: "https://cloud.appwrite.io/v1",
@@ -22,7 +22,8 @@ client
 
 const account = new Account(client);
 const avatars = new Avatars(client);
-const databases = new Databases(client)
+const databases = new Databases(client);
+const storage = new Storage(client);
 
 // Register User
 export const createUser = async ({ username, email, password }: CreateUserProps) => {
@@ -51,8 +52,8 @@ export const createUser = async ({ username, email, password }: CreateUserProps)
                 avatar: avatarUrl
             }
         );
-
-    } catch (error:any) {
+        return newUser;
+    } catch (error: any) {
         console.log(error);
         throw Error(error);
     }
@@ -67,10 +68,10 @@ type CreateUserProps = {
 export const signIn = async ({ email, password }: SignInProps) => {
     try {
         const session = await account.createEmailPasswordSession(email, password);
-
-        return session;
+        return true;
     } catch (error) {
-        console.log(error);
+        console.log('Sign in error: ' + error);
+        return false;
     }
 }
 
@@ -80,30 +81,31 @@ type SignInProps = {
 }
 
 export const getCurrentUser = async () => {
- try {
-    const currentAccount = await account.get();
-    
-    if (!currentAccount) throw Error;
+    try {
+        const currentAccount = await account.get();
 
-    const currentUser = await databases.listDocuments(
-        config.databaseId,
-        config.userCollectionId,
-        [Query.equal('accountId', currentAccount.$id)]
-    );
+        if (!currentAccount) throw Error;
 
-    if (!currentUser) throw Error;
-    
-    return currentUser.documents[0];
- } catch (error) {
-    console.log(error);
- }   
+        const currentUser = await databases.listDocuments(
+            config.databaseId,
+            config.userCollectionId,
+            [Query.equal('accountId', currentAccount.$id)]
+        );
+
+        if (!currentUser) throw Error;
+
+        return currentUser.documents[0];
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 export const getVideoList = async () => {
     try {
         const videos = await databases.listDocuments(
             config.databaseId,
-            config.videoCollectionId
+            config.videoCollectionId,
+            [Query.orderDesc('$createdAt')]
         );
 
         return videos.documents;
@@ -124,4 +126,124 @@ export const getLatestVideoList = async () => {
     } catch (error) {
         console.log(error);
     }
+}
+
+export const searchPosts = async (query: string) => {
+    try {
+        const videos = await databases.listDocuments(
+            config.databaseId,
+            config.videoCollectionId,
+            [Query.search('title', query)]
+        );
+
+        return videos.documents;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export const searchUserPosts = async (user: string) => {
+    try {
+        const videos = await databases.listDocuments(
+            config.databaseId,
+            config.videoCollectionId,
+            [Query.equal('creator', user)]
+        );
+
+        return videos.documents;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export const signOut = async () => {
+    try {
+        const session = await account.deleteSession('current');
+        return session;
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export const getFilePreview = async (fileId: string, type: string) => {
+    let fileUrl;
+    try {
+        if (type === 'video') {
+            fileUrl = storage.getFileView(config.storageId, fileId)
+        } else if (type === 'image') {
+            fileUrl = storage.getFilePreview(config.storageId, fileId, 2000, 2000, ImageGravity.Top, 100)
+        }else{
+            throw Error('Invalid file type')
+        }
+        
+        if(!fileUrl) throw Error;
+
+        return fileUrl;
+    } catch (error) {
+        console.log(error);
+
+        if (error instanceof Error)
+            throw Error(error.message)
+    }
+}
+
+export const uploadFile = async (type: string, file?: ImagePickerAsset) => {
+    if (!file || !file.mimeType || !file.fileSize || !file.uri || !file.fileName) throw Error('File missing assets');
+
+
+    const asset = {
+        type: file.mimeType,
+        name: file.fileName,
+        size: file.fileSize,
+        uri: file.uri
+    }
+
+    try {
+        const uploadedFile = await storage.createFile(
+            config.storageId,
+            ID.unique(), asset);
+
+        const fileUrl = await getFilePreview(uploadedFile.$id, type);
+
+        return fileUrl;
+    } catch (error) {
+        console.log(error);
+        if (error instanceof Error)
+            throw Error(error.message)
+    }
+
+}
+
+export const uploadVideo = async (form: FormProps) => {
+    try {
+        const [thumbnailUrl, videoUrl] = await Promise.all([
+            uploadFile('image', form.thumbnail ),
+            uploadFile('video', form.video )
+        ])
+
+        const newPost = await databases.createDocument(
+            config.databaseId,
+            config.videoCollectionId,
+            ID.unique(),
+            {
+                title: form.title,
+                video: videoUrl,
+                thumbnail: thumbnailUrl,
+                prompt: form.prompt,
+                creator: form.userId
+            }
+        );
+    } catch (error) {
+        console.log(error);
+        if (error instanceof Error)
+            throw Error(error.message)
+    }
+}
+
+type FormProps = {
+    userId: string,
+    title: string,
+    video?: ImagePickerAsset,
+    thumbnail?: ImagePickerAsset,
+    prompt: string
 }

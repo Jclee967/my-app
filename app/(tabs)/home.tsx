@@ -6,29 +6,18 @@ import { images } from '../../constants'
 import SearchInput from '../../components/SearchInput'
 import Trending from '../../components/Trending'
 import EmptyState from '../../components/EmptyState'
+import VideoCard from '../../components/VideoCard'
 import { getVideoList, getLatestVideoList } from '../../lib/appwrite'
 import useAppwrite from '../../lib/useAppwrite'
 import { Models } from 'react-native-appwrite/src';
-import VideoCard from '../../components/VideoCard'
+import { useGlobalContext } from '../../context/GlobalProvider'
 
 
 const Home = () => {
   const {data: posts, refetch} = useAppwrite(getVideoList);
   const {data: latestPosts} = useAppwrite(getLatestVideoList);
   const [refreshing, setRefreshing] = useState(false);
-
-  // const data =[
-  //   {
-  //     id: '1',
-  //     title: 'Trendingggggggggg 1',
-  //   },{
-  //    id:'2',
-  //    title: 'Trendingggggggggggggggggggggggg 2',
-  //   },{
-  //    id:'3',
-  //    title: 'Trendingggggggggggggggggggggggggg 3',
-  //   }
-  // ]
+  const { user } = useGlobalContext();
 
   const onRefresh = async() => {
     setRefreshing(true);
@@ -54,7 +43,7 @@ const Home = () => {
                   Welcome Back
                 </Text>
                 <Text className='text-2xl font-psemibold text-white'>
-                  Username
+                  {user?.username}
                 </Text>
               </View>
 
@@ -66,7 +55,7 @@ const Home = () => {
               </View>
             </View>
 
-            <SearchInput value='' handleChangeText={() => { }} />
+            <SearchInput />
 
             <View className='w-full flex-1 pt-5 pb-8'>
               <Text className='text-gray-100 text-lg mb-3'>

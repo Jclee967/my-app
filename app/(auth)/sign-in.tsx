@@ -21,6 +21,7 @@ const SignIn = () => {
   const handleSubmit = async () => {
     if ( !form.email || !form.password) {
       Alert.alert('Error', 'Please fill in all fields')
+      return;
     }
 
     setIsSubmitting(true);
@@ -30,9 +31,13 @@ const SignIn = () => {
         email: form.email,
         password: form.password
       });
-
       const result = await getCurrentUser();
-      setUser(result ?? null); // TODO: check if user is null or undefined
+
+      if (!result) {
+        throw new Error('User not found');
+      }
+
+      setUser(result);
       setIsLoggedIn(true);
 
       Alert.alert('Success', 'User signed in successfully');
