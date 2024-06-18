@@ -28,7 +28,7 @@ const Profile = () => {
 
   const logout = async () =>{
     await signOut();
-    setUser(null);
+    setUser(undefined);
     setIsLoggedIn(false);
 
     router.replace('/sign-in')

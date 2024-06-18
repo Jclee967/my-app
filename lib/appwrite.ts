@@ -240,6 +240,60 @@ export const uploadVideo = async (form: FormProps) => {
     }
 }
 
+export const getLikedVideos = async (userId: string) => {
+    try {
+        const videos = await databases.listDocuments(
+            config.databaseId,
+            config.videoCollectionId,
+            [Query.contains('likes', [userId])]
+        );
+        console.log(videos.documents)
+        return videos.documents;
+    } catch (error) {
+        console.log(error);
+        if (error instanceof Error)
+            throw Error(error.message)
+    }
+}
+
+export const UpdateVideoLike = async (videoId: string, userId: string | undefined) => {
+    try {
+        if (!userId) throw Error('User not found')
+
+        const video = await databases.getDocument(
+            config.databaseId,
+            config.videoCollectionId,
+            videoId
+        );
+
+        if (!video) throw Error('Video not found');
+
+        const likes = video.likes ? video.likes : [];
+        console.log(likes)
+
+        if (likes.includes(userId)) {
+            likes.splice(likes.indexOf(userId), 1);
+        } else {
+            likes.push(userId);
+        }
+
+        const updatedVideo = await databases.updateDocument(
+            config.databaseId,
+            config.videoCollectionId,
+            videoId,
+            {
+                likes
+            }
+        );
+
+        return updatedVideo;
+    } catch (error) {
+        console.log(error);
+        if (error instanceof Error)
+            throw Error(error.message)
+    }
+}
+
 type FormProps = {
     userId: string,
     title: string,

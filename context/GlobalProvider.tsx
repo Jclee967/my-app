@@ -10,15 +10,15 @@ interface GlobalProviderProps {
 type GlobalContextType = {
     isLoggedIn: boolean,
     setIsLoggedIn: (value: boolean) => void,
-    user: Models.Document | null,
-    setUser: (value: Models.Document | null) => void,
+    user: Models.Document | undefined,
+    setUser: (value: Models.Document | undefined) => void,
     isLoading: boolean
 }
 
 const GlobalContext = createContext<GlobalContextType>({
     isLoggedIn: false,
     setIsLoggedIn: () => {},
-    user: null,
+    user: undefined,
     setUser: () => {},
     isLoading: false
 });
@@ -27,7 +27,7 @@ export const useGlobalContext = () => useContext(GlobalContext);
 
 const GlobalProvider = ( props: GlobalProviderProps) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState<Models.Document | null>(null);
+    const [user, setUser] = useState<Models.Document | undefined>();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -38,7 +38,7 @@ const GlobalProvider = ( props: GlobalProviderProps) => {
                 setIsLoggedIn(true);
             }else{
                 setIsLoggedIn(false);
-                setUser(null);
+                setUser(undefined);
             }
         })
         .catch((err) => console.log(err))

@@ -9,7 +9,6 @@ import EmptyState from '../../components/EmptyState'
 import VideoCard from '../../components/VideoCard'
 import { getVideoList, getLatestVideoList } from '../../lib/appwrite'
 import useAppwrite from '../../lib/useAppwrite'
-import { Models } from 'react-native-appwrite/src';
 import { useGlobalContext } from '../../context/GlobalProvider'
 
 
@@ -32,7 +31,7 @@ const Home = () => {
 
       <FlatList
         data={posts}
-        renderItem={({ item }) => <VideoCard video={item}/>}
+        renderItem={({ item }) => <VideoCard video={item} userId={user?.$id}/>}
         keyExtractor={item => item.$id}
         ListHeaderComponent={() => (
 
